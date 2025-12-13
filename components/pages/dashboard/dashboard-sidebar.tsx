@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar, ChevronUp, Home, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -35,7 +36,7 @@ const navigationItems = [
     title: "Scheduling",
     items: [
       {
-        title: "Events Calendar",
+        title: "Schedule",
         url: "/dashboard/schedule",
         icon: Calendar,
         description: "Manage game schedules",
@@ -61,9 +62,49 @@ const navigationItems = [
   },
 ];
 
-export function AppSidebar() {
+// Flatten navigation items for mobile bottom nav
+const flatNavItems = navigationItems.flatMap((group) => group.items);
+
+// Mobile Bottom Navigation Component
+function MobileBottomNav() {
   const pathname = usePathname();
 
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
+      <nav className="flex items-center justify-around px-2 py-2">
+        {flatNavItems.map((item) => {
+          const isActive = pathname === item.url;
+          return (
+            <Link
+              key={item.title}
+              href={item.url}
+              className={`flex flex-col items-center justify-center min-w-0 flex-1 px-2 py-2 rounded-lg transition-all ${
+                isActive
+                  ? "text-blue-600"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <item.icon
+                className={`h-5 w-5 mb-1 ${isActive ? "text-blue-600" : ""}`}
+              />
+              <span
+                className={`text-xs font-medium truncate ${
+                  isActive ? "font-semibold" : ""
+                }`}
+              >
+                {item.title}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
+// Desktop Sidebar Component
+function DesktopSidebar() {
+  const pathname = usePathname();
   const { toggleSidebar } = useGlobalStore();
 
   return (
@@ -152,6 +193,16 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   );
+}
+
+export function AppSidebar() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileBottomNav />;
+  }
+
+  return <DesktopSidebar />;
 }
 
 // Legacy component for backward compatibility

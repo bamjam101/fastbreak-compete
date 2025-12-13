@@ -1,91 +1,70 @@
 "use client";
 
 import { AppSidebar } from "@/components/pages/dashboard/dashboard-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Bell, Menu, Search } from "lucide-react";
+import { ReactNode } from "react";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-
-  const getBreadcrumbs = () => {
-    const segments = pathname.split("/").filter(Boolean);
-    const breadcrumbs: {
-      href: string;
-      label: string;
-    }[] = [];
-
-    segments.forEach((segment, index) => {
-      const href = "/" + segments.slice(0, index + 1).join("/");
-      const label = segment.charAt(0).toUpperCase() + segment.slice(1);
-      breadcrumbs.push({ href, label });
-    });
-
-    return breadcrumbs;
-  };
-
-  const breadcrumbs = getBreadcrumbs();
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const isMobile = useIsMobile();
 
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb>
-            <BreadcrumbList>
-              {breadcrumbs.map(
-                (
-                  breadcrumb: {
-                    href: string;
-                    label: string;
-                  },
-                  index: number
-                ) => (
-                  <div
-                    key={breadcrumb.href}
-                    className="flex items-center gap-1.5"
-                  >
-                    {index > 0 && <BreadcrumbSeparator />}
-                    <BreadcrumbItem>
-                      {index === breadcrumbs.length - 1 ? (
-                        <BreadcrumbPage className="text-slate-600">
-                          {breadcrumb.label}
-                        </BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink
-                          href={breadcrumb.href}
-                          className="text-slate-500 hover:text-slate-700"
-                        >
-                          {breadcrumb.label}
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>
+      <div className="flex h-screen w-full overflow-hidden">
+        {/* Desktop Sidebar */}
+        {!isMobile && <AppSidebar />}
+
+        {/* Main Content Area */}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Header */}
+          <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
+            <div className="flex items-center justify-between px-4 py-3 md:px-6">
+              <div className="flex items-center gap-3">
+                {!isMobile && <SidebarTrigger />}
+                {isMobile && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-blue-800 text-white font-bold text-xs">
+                      FB
+                    </div>
+                    <span className="font-semibold text-slate-900">
+                      Fastbreak
+                    </span>
                   </div>
-                )
-              )}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </header>
-        <main className="flex-1 overflow-auto bg-slate-50">{children}</main>
-      </SidebarInset>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Search className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 relative"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+                </Button>
+                {isMobile && (
+                  <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className={`flex-1 overflow-auto ${isMobile ? "pb-20" : ""}`}>
+            {children}
+          </main>
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && <AppSidebar />}
+      </div>
     </SidebarProvider>
   );
 }

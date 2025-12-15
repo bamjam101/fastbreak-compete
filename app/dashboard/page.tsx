@@ -1,6 +1,11 @@
 "use client";
 
 import { useGlobalStore } from "@/app/store/global";
+import {
+  AddGameDialog,
+  AddTeamDialog,
+  AddVenueDialog,
+} from "@/components/dialogs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,8 +31,14 @@ import {
   Plus,
   Users,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [showAddVenue, setShowAddVenue] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
   const { games, teams, venues, getConstraintViolations } = useGlobalStore();
 
   // Analytics calculations
@@ -157,11 +168,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => router.push("/dashboard/schedule")}>
             <BarChart3 className="h-4 w-4 mr-2" />
-            Export Report
+            View Schedule
           </Button>
-          <Button>
+          <Button onClick={() => setShowAddGame(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Schedule Game
           </Button>
@@ -391,19 +402,35 @@ export default function DashboardPage() {
               <CardDescription>Common scheduling tasks</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => setShowAddGame(true)}
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule New Game
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => setShowAddTeam(true)}
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Add Team
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => setShowAddVenue(true)}
+              >
                 <MapPin className="h-4 w-4 mr-2" />
                 Add Venue
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => router.push("/dashboard/schedule")}
+              >
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Resolve Conflicts
               </Button>
@@ -491,6 +518,11 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <AddTeamDialog open={showAddTeam} onOpenChange={setShowAddTeam} />
+      <AddVenueDialog open={showAddVenue} onOpenChange={setShowAddVenue} />
+      <AddGameDialog open={showAddGame} onOpenChange={setShowAddGame} />
     </div>
   );
 }

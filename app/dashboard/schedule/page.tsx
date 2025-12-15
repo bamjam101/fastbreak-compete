@@ -1,6 +1,7 @@
 "use client";
 
 import { useGlobalStore } from "@/app/store/global";
+import { AddGameDialog } from "@/components/dialogs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,8 @@ import {
   Search,
   Shuffle,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function SchedulePage() {
   const {
@@ -44,6 +46,9 @@ export default function SchedulePage() {
   } = useGlobalStore();
   const [groupBy, setGroupBy] = useState<"venue" | "time">("venue");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [initialVenueId, setInitialVenueId] = useState<string | undefined>();
+  const [initialHour, setInitialHour] = useState<number | undefined>();
 
   // Time slots for timeline (9 AM to 10 PM)
   const timeSlots = Array.from({ length: 14 }, (_, i) => {
@@ -66,12 +71,46 @@ export default function SchedulePage() {
     setSelectedDate(newDate);
   };
 
-  // Filter games by current week
-  const weekGames = games.filter((game) => {
-    const gameDate = parseISO(game.startTime);
-    const weekEnd = addDays(currentWeekStart, 6);
-    return gameDate >= currentWeekStart && gameDate <= weekEnd;
-  });
+  // Filter games by current week and search term
+  const weekGames = useMemo(() => {
+    return games.filter((game) => {
+      const gameDate = parseISO(game.startTime);
+      const weekEnd = addDays(currentWeekStart, 6);
+      const isInWeek = gameDate >= currentWeekStart && gameDate <= weekEnd;
+
+      if (!isInWeek) return false;
+
+      // Apply search filter
+      if (searchTerm.trim()) {
+        const search = searchTerm.toLowerCase();
+        const homeTeam = teams.find((t) => t.id === game.homeTeamId);
+        const awayTeam = teams.find((t) => t.id === game.awayTeamId);
+        const venue = venues.find((v) => v.id === game.venueId);
+        const hasConflict = getConstraintViolations(game.id).length > 0;
+
+        const matchesTeam =
+          homeTeam?.name.toLowerCase().includes(search) ||
+          awayTeam?.name.toLowerCase().includes(search);
+        const matchesVenue = venue?.name.toLowerCase().includes(search);
+        const matchesConflict =
+          search === "conflict" || search === "conflicts"
+            ? hasConflict
+            : false;
+        const matchesGameId = game.id.includes(search);
+
+        return matchesTeam || matchesVenue || matchesConflict || matchesGameId;
+      }
+
+      return true;
+    });
+  }, [games, currentWeekStart, searchTerm, teams, venues, getConstraintViolations]);
+
+  // Handler for clicking empty slot to add game
+  const handleAddGameAtSlot = (venueId: string, hour: number) => {
+    setInitialVenueId(venueId);
+    setInitialHour(hour);
+    setShowAddGame(true);
+  };
 
   // Helper function to get venue color
   const getVenueColor = (venueId: string) => {
@@ -128,6 +167,13 @@ export default function SchedulePage() {
       endTime: newEndTime,
       status: "scheduled",
     });
+
+    const targetVenue = venues.find((v) => v.id === venueId);
+    const homeTeam = teams.find((t) => t.id === sourceGame.homeTeamId);
+    const awayTeam = teams.find((t) => t.id === sourceGame.awayTeamId);
+    toast.success(
+      `Moved ${awayTeam?.name} vs ${homeTeam?.name} to ${targetVenue?.name} at ${format(gameDate, "h:mm a")}`
+    );
   };
 
   // Get current time indicator position
@@ -180,7 +226,14 @@ export default function SchedulePage() {
                 <SelectItem value="time">Group by Time</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                setInitialVenueId(undefined);
+                setInitialHour(undefined);
+                setShowAddGame(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Event
             </Button>
@@ -332,7 +385,12 @@ export default function SchedulePage() {
                             }`}
                           >
                             {slotGames.length === 0 && (
-                              <button className="hidden group-hover:flex w-8 h-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-5">
+                              <button
+                                onClick={() =>
+                                  handleAddGameAtSlot(venue.id, slot.hour24)
+                                }
+                                className="hidden group-hover:flex w-8 h-8 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-5"
+                              >
                                 <Plus className="h-4 w-4" />
                               </button>
                             )}
@@ -440,6 +498,21 @@ export default function SchedulePage() {
           </div>
         </div>
       </DragDropContext>
+
+      {/* Add Game Dialog */}
+      <AddGameDialog
+        open={showAddGame}
+        onOpenChange={(open) => {
+          setShowAddGame(open);
+          if (!open) {
+            setInitialVenueId(undefined);
+            setInitialHour(undefined);
+          }
+        }}
+        initialVenueId={initialVenueId}
+        initialDate={selectedDate}
+        initialHour={initialHour}
+      />
     </div>
   );
 }

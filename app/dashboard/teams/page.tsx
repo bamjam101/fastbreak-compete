@@ -1,6 +1,7 @@
 "use client";
 
-import { useGlobalStore } from "@/app/store/global";
+import { Team, useGlobalStore } from "@/app/store/global";
+import { AddGameDialog, AddTeamDialog, EditTeamDialog } from "@/components/dialogs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,10 +23,17 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function TeamsPage() {
+  const router = useRouter();
   const { teams, games } = useGlobalStore();
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [showEditTeam, setShowEditTeam] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
   // Calculate team statistics
   const teamStats = useMemo(() => {
@@ -70,11 +78,18 @@ export default function TeamsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="text-slate-600">
+            <Button
+              variant="outline"
+              className="text-slate-600"
+              onClick={() => toast.info("Export feature coming soon")}
+            >
               <MoreHorizontal className="h-4 w-4 mr-2" />
               Export Data
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setShowAddTeam(true)}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add New Team
             </Button>
@@ -193,6 +208,10 @@ export default function TeamsPage() {
                     variant="ghost"
                     size="sm"
                     className="text-slate-400 hover:text-slate-600"
+                    onClick={() => {
+                      setSelectedTeam(team);
+                      setShowEditTeam(true);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -250,11 +269,25 @@ export default function TeamsPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowAddGame(true)}
+                  >
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() =>
+                      toast.info(
+                        `${team.name}: ${team.totalGames} games, ${team.wins} wins (${team.winRate}% win rate)`
+                      )
+                    }
+                  >
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Stats
                   </Button>
@@ -264,6 +297,18 @@ export default function TeamsPage() {
           ))}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <AddTeamDialog open={showAddTeam} onOpenChange={setShowAddTeam} />
+      <AddGameDialog open={showAddGame} onOpenChange={setShowAddGame} />
+      <EditTeamDialog
+        open={showEditTeam}
+        onOpenChange={(open) => {
+          setShowEditTeam(open);
+          if (!open) setSelectedTeam(null);
+        }}
+        team={selectedTeam}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useGlobalStore } from "@/app/store/global";
+import { Venue, useGlobalStore } from "@/app/store/global";
+import { AddGameDialog, AddVenueDialog, EditVenueDialog } from "@/components/dialogs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,10 +26,18 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function VenuesPage() {
+  const router = useRouter();
   const { venues, games } = useGlobalStore();
+  const [showAddVenue, setShowAddVenue] = useState(false);
+  const [showAddGame, setShowAddGame] = useState(false);
+  const [showEditVenue, setShowEditVenue] = useState(false);
+  const [selectedVenueId, setSelectedVenueId] = useState<string | undefined>();
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
 
   // Calculate venue statistics
   const venueStats = useMemo(() => {
@@ -101,11 +110,18 @@ export default function VenuesPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="text-slate-600">
+            <Button
+              variant="outline"
+              className="text-slate-600"
+              onClick={() => toast.info("Export feature coming soon")}
+            >
               <MoreHorizontal className="h-4 w-4 mr-2" />
               Export Data
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setShowAddVenue(true)}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add New Venue
             </Button>
@@ -210,6 +226,10 @@ export default function VenuesPage() {
                     variant="ghost"
                     size="sm"
                     className="text-slate-400 hover:text-slate-600"
+                    onClick={() => {
+                      setSelectedVenue(venue);
+                      setShowEditVenue(true);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -310,11 +330,28 @@ export default function VenuesPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedVenueId(venue.id);
+                      setShowAddGame(true);
+                    }}
+                  >
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() =>
+                      toast.info(
+                        `${venue.name}: ${venue.totalGames} total games, ${venue.utilizationRate}% utilization, ${venue.conflicts} conflicts`
+                      )
+                    }
+                  >
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Analytics
                   </Button>
@@ -324,6 +361,25 @@ export default function VenuesPage() {
           ))}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <AddVenueDialog open={showAddVenue} onOpenChange={setShowAddVenue} />
+      <AddGameDialog
+        open={showAddGame}
+        onOpenChange={(open) => {
+          setShowAddGame(open);
+          if (!open) setSelectedVenueId(undefined);
+        }}
+        initialVenueId={selectedVenueId}
+      />
+      <EditVenueDialog
+        open={showEditVenue}
+        onOpenChange={(open) => {
+          setShowEditVenue(open);
+          if (!open) setSelectedVenue(null);
+        }}
+        venue={selectedVenue}
+      />
     </div>
   );
 }

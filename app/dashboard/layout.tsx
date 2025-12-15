@@ -1,10 +1,8 @@
 "use client";
 
 import { AppSidebar } from "@/components/pages/dashboard/dashboard-sidebar";
-import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Bell, Menu, Search } from "lucide-react";
 import { ReactNode } from "react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
@@ -19,7 +17,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Main Content Area */}
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Header */}
-          <header className="sticky top-0 z-40 bg-white border-b border-slate-200 min-h-[8svh]">
+          <header className="flex items-center sticky top-0 z-40 bg-white border-b border-slate-200 min-h-[8svh]">
             <div className="flex items-center justify-between px-4 py-3 md:px-6">
               <div className="flex items-center gap-3">
                 {!isMobile && <SidebarTrigger />}
@@ -32,25 +30,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       Fastbreak
                     </span>
                   </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Search className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 relative"
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-                </Button>
-                {isMobile && (
-                  <Button variant="ghost" size="icon" className="h-9 w-9">
-                    <Menu className="h-4 w-4" />
-                  </Button>
                 )}
               </div>
             </div>

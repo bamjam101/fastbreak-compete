@@ -19,7 +19,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Main Content Area */}
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Header */}
-          <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
+          <header className="sticky top-0 z-40 bg-white border-b border-slate-200 min-h-[8svh]">
             <div className="flex items-center justify-between px-4 py-3 md:px-6">
               <div className="flex items-center gap-3">
                 {!isMobile && <SidebarTrigger />}

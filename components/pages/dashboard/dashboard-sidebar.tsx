@@ -109,7 +109,7 @@ function DesktopSidebar() {
 
   return (
     <Sidebar className="border-r border-slate-200 bg-slate-50">
-      <SidebarHeader className="border-b border-slate-200 p-4">
+      <SidebarHeader className="border-b border-slate-200 px-4 py-3.5 min-h-[8svh]">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-blue-600 to-blue-800 text-white font-bold text-sm">
             FB
